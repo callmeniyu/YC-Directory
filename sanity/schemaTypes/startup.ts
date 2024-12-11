@@ -44,7 +44,7 @@ export const startup = defineType({
         defineField({
             name: 'pitch',
             type: 'markdown',
-            validation: (Rule)=> Rule.min(1).max(20).required().error('Please enter a category')
+            validation: (Rule)=> Rule.min(0).max(20000).required().error('Please enter a markdown')
         }),
     ],
 })
