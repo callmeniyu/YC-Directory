@@ -12,9 +12,7 @@ const md = markdownit();
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     const id = (await params).id
-    console.log(id);
     const post = await client.fetch(STARTUP_BY_ID_QUERY, { id })
-    console.log("post",post);
     
     if (!post) return notFound()
     
