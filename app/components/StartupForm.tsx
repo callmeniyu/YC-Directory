@@ -4,14 +4,18 @@ import { Input } from "./ui/input"
 import MDEditor from "@uiw/react-md-editor"
 import { Button } from "./ui/button"
 import { Send } from "lucide-react"
-import { error } from "console"
-import { stat } from "fs"
-import { title } from "process"
 import { formSchema } from "@/lib/validation"
+import {z} from "zod"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+import { Textarea } from "./ui/textarea"
+import { createPitch } from "@/lib/actions"
 
 const StartupForm = () => {
     const [pitch, setPitch] = useState("")
-
+    const { toast } = useToast()
+    
+    const router = useRouter()
     const [errors, setErrors] = useState<Record<string, string>>({})
 
     const handleSubmit = async(prevState:any, formData: FormData) => {
@@ -26,11 +30,43 @@ const StartupForm = () => {
 
             await formSchema.parseAsync(formValues);
 
-            // const result = await createIdea(prevState, formData, pitch)
-            console.log(formValues);
+            const result = await createPitch(prevState, formData, pitch)
+
+            if (result.status === "SUCCESS") {
+                toast({
+                    title: "Success",
+                    description: "Your pitch has been created successfully",
+                })
+                router.push(`/startup/${result._id}`)
+            }
+            
+            return result
             
         } catch (error) {
-            
+            if (error instanceof z.ZodError) { 
+                const fieldErrors = error.flatten().fieldErrors;
+
+                setErrors(fieldErrors as unknown as Record<string, string>);
+
+                toast({
+                    title: "Error",
+                    description: "Please check your inputs and try again",
+                    variant:"destructive"
+                })
+                return {...prevState, error: "Validation failed", status: "ERROR"};
+            }
+
+            toast({
+                title: "Error",
+                description: "Please check your inputs and try again",
+                variant:"destructive"
+            })
+
+            return {
+                ...prevState,
+                error: "An unexpected error occurred",
+                status: "ERROR",
+            }
         }
     }
     
@@ -40,7 +76,7 @@ const StartupForm = () => {
     })
 
     return (
-        <form action={() => {}} className="startup-form">
+        <form action={formAction} className="startup-form">
             <div>
                 <label htmlFor="title" className="startup-form_label">
                     Title
@@ -52,7 +88,7 @@ const StartupForm = () => {
                 <label htmlFor="description" className="startup-form_label">
                     Description
                 </label>
-                <Input
+                <Textarea
                     id="description"
                     name="description"
                     className="startup-form_textarea"
@@ -79,8 +115,8 @@ const StartupForm = () => {
                     Image URL
                 </label>
                 <Input
-                    id="Image URL"
-                    name="Image URL"
+                    id="link"
+                    name="link"
                     className="startup-form_input"
                     required
                     placeholder="Startup Image URL"
