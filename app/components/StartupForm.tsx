@@ -18,6 +18,11 @@ const StartupForm = () => {
     const router = useRouter()
     const [errors, setErrors] = useState<Record<string, string>>({})
 
+    toast({
+        title: "Success",
+        description: "Your pitch has been created successfully",
+    })
+
     const handleSubmit = async(prevState:any, formData: FormData) => {
         try {
             const formValues = {
